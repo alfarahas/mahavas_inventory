@@ -83,7 +83,27 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (editingProduct) {
-      setFormData(editingProduct);
+      // Safely merge the editing product data with our default structure
+      setFormData(prev => ({
+        ...prev,
+        ...editingProduct,
+        specifications: {
+          ...prev.specifications,
+          ...(editingProduct.specifications || {})
+        },
+        stock: {
+          ...prev.stock,
+          ...(editingProduct.stock || {})
+        },
+        pricing: {
+          ...prev.pricing,
+          ...(editingProduct.pricing || {})
+        },
+        supplier: {
+          ...prev.supplier,
+          ...(editingProduct.supplier || {})
+        }
+      }));
     }
     loadCategories();
   }, [editingProduct]);
@@ -105,7 +125,7 @@ const AddProduct = () => {
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent],
+          ...(prev[parent] || {}), // Safe access with fallback
           [child]: type === 'checkbox' ? checked : value
         }
       }));
@@ -119,13 +139,12 @@ const AddProduct = () => {
 
   // Auto-update status based on stock levels
   useEffect(() => {
-    if (formData.stock.quantity <= 0) {
+    if (formData.stock?.quantity <= 0) {
       setFormData(prev => ({
         ...prev,
         status: 'out_of_stock'
       }));
-    } else if (formData.stock.quantity <= formData.stock.minStock) {
-      // Keep current status if it's already set, otherwise set to active
+    } else if (formData.stock?.quantity <= (formData.stock?.minStock || 10)) {
       if (formData.status === 'out_of_stock') {
         setFormData(prev => ({
           ...prev,
@@ -133,11 +152,11 @@ const AddProduct = () => {
         }));
       }
     }
-  }, [formData.stock.quantity, formData.stock.minStock]);
+  }, [formData.stock?.quantity, formData.stock?.minStock]);
 
   const getStockStatus = () => {
-    const quantity = formData.stock.quantity;
-    const minStock = formData.stock.minStock;
+    const quantity = formData.stock?.quantity || 0;
+    const minStock = formData.stock?.minStock || 10;
 
     if (quantity <= 0) {
       return { status: 'Out of Stock', color: 'error', icon: <WarningIcon /> };
@@ -149,8 +168,8 @@ const AddProduct = () => {
   };
 
   const calculateProfit = () => {
-    const cost = parseFloat(formData.pricing.cost) || 0;
-    const sellingPrice = parseFloat(formData.pricing.sellingPrice) || 0;
+    const cost = parseFloat(formData.pricing?.cost) || 0;
+    const sellingPrice = parseFloat(formData.pricing?.sellingPrice) || 0;
     
     if (cost === 0) return 0;
     
@@ -181,13 +200,13 @@ const AddProduct = () => {
         ...formData,
         pricing: {
           ...formData.pricing,
-          cost: parseFloat(formData.pricing.cost) || 0,
-          sellingPrice: parseFloat(formData.pricing.sellingPrice) || 0,
+          cost: parseFloat(formData.pricing?.cost) || 0,
+          sellingPrice: parseFloat(formData.pricing?.sellingPrice) || 0,
         },
         stock: {
           ...formData.stock,
-          quantity: parseInt(formData.stock.quantity) || 0,
-          minStock: parseInt(formData.stock.minStock) || 10,
+          quantity: parseInt(formData.stock?.quantity) || 0,
+          minStock: parseInt(formData.stock?.minStock) || 10,
         }
       };
 
@@ -388,7 +407,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Size"
                     name="specifications.size"
-                    value={formData.specifications.size}
+                    value={formData.specifications?.size || ''}
                     onChange={handleChange}
                     placeholder="e.g., 2 inch, DN50"
                   />
@@ -398,7 +417,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Rating"
                     name="specifications.rating"
-                    value={formData.specifications.rating}
+                    value={formData.specifications?.rating || ''}
                     onChange={handleChange}
                     placeholder="e.g., 150 PSI, PN16"
                   />
@@ -408,7 +427,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Material"
                     name="specifications.material"
-                    value={formData.specifications.material}
+                    value={formData.specifications?.material || ''}
                     onChange={handleChange}
                     placeholder="e.g., Stainless Steel, Cast Iron"
                   />
@@ -418,7 +437,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Pressure Rating"
                     name="specifications.pressure"
-                    value={formData.specifications.pressure}
+                    value={formData.specifications?.pressure || ''}
                     onChange={handleChange}
                     placeholder="e.g., 150-300 PSI"
                   />
@@ -428,7 +447,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Temperature Range"
                     name="specifications.temperature"
-                    value={formData.specifications.temperature}
+                    value={formData.specifications?.temperature || ''}
                     onChange={handleChange}
                     placeholder="e.g., -20°C to 150°C"
                   />
@@ -438,7 +457,7 @@ const AddProduct = () => {
                     control={
                       <Checkbox
                         name="specifications.IBR_approved"
-                        checked={formData.specifications.IBR_approved}
+                        checked={formData.specifications?.IBR_approved || false}
                         onChange={handleChange}
                       />
                     }
@@ -473,7 +492,7 @@ const AddProduct = () => {
                     type="number"
                     label="Current Stock"
                     name="stock.quantity"
-                    value={formData.stock.quantity}
+                    value={formData.stock?.quantity || 0}
                     onChange={handleChange}
                     inputProps={{ min: 0 }}
                   />
@@ -485,7 +504,7 @@ const AddProduct = () => {
                     type="number"
                     label="Minimum Stock"
                     name="stock.minStock"
-                    value={formData.stock.minStock}
+                    value={formData.stock?.minStock || 10}
                     onChange={handleChange}
                     inputProps={{ min: 0 }}
                     helperText="Low stock alert threshold"
@@ -498,7 +517,7 @@ const AddProduct = () => {
                     select
                     label="Stock Unit"
                     name="stock.unit"
-                    value={formData.stock.unit}
+                    value={formData.stock?.unit || 'pcs'}
                     onChange={handleChange}
                   >
                     <MenuItem value="pcs">Pieces</MenuItem>
@@ -521,7 +540,7 @@ const AddProduct = () => {
                     type="number"
                     label="Cost Price (₹)"
                     name="pricing.cost"
-                    value={formData.pricing.cost}
+                    value={formData.pricing?.cost || ''}
                     onChange={handleChange}
                     inputProps={{ min: 0, step: 0.01 }}
                   />
@@ -533,14 +552,14 @@ const AddProduct = () => {
                     type="number"
                     label="Selling Price (₹)"
                     name="pricing.sellingPrice"
-                    value={formData.pricing.sellingPrice}
+                    value={formData.pricing?.sellingPrice || ''}
                     onChange={handleChange}
                     inputProps={{ min: 0, step: 0.01 }}
                   />
                 </Grid>
 
                 {/* Profit Calculation */}
-                {(formData.pricing.cost && formData.pricing.sellingPrice) && (
+                {(formData.pricing?.cost && formData.pricing?.sellingPrice) && (
                   <Grid item xs={12}>
                     <Paper elevation={1} sx={{ p: 2, bgcolor: 'background.default' }}>
                       <Typography variant="subtitle1" gutterBottom>
@@ -584,7 +603,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Supplier Name"
                     name="supplier.name"
-                    value={formData.supplier.name}
+                    value={formData.supplier?.name || ''}
                     onChange={handleChange}
                     placeholder="Primary supplier name"
                   />
@@ -594,7 +613,7 @@ const AddProduct = () => {
                     fullWidth
                     label="Supplier Contact"
                     name="supplier.contact"
-                    value={formData.supplier.contact}
+                    value={formData.supplier?.contact || ''}
                     onChange={handleChange}
                     placeholder="Phone or email"
                   />
@@ -606,7 +625,7 @@ const AddProduct = () => {
                     <InputLabel>Product Status</InputLabel>
                     <Select
                       name="status"
-                      value={formData.status}
+                      value={formData.status || 'active'}
                       onChange={handleChange}
                       label="Product Status"
                     >

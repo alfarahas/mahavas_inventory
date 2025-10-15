@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Determine base URL based on environment
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    // In production, both frontend and backend are on the same domain
+    return '/api';
+  } else {
+    // In development, use localhost
+    return 'http://localhost:5000/api';
+  }
+};
+
+const API_BASE_URL = getBaseURL();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
