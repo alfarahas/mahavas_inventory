@@ -5,6 +5,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
+// Import routes
+import authRoutes from './routes/auth.js';
+import productsRoutes from './routes/products.js';
+import categoriesRoutes from './routes/categories.js';
+
 // ES module equivalents for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +33,7 @@ const connectDB = async () => {
 // Connect to Database
 connectDB();
 
-// CORS Configuration - simplified for now to debug
+// CORS Configuration
 const corsOptions = {
   origin: [
     'https://mahavas-inventory.onrender.com',
@@ -49,11 +54,6 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/build')));
 }
-
-// Import routes using dynamic imports
-const authRoutes = (await import('./routes/auth.js')).default;
-const productsRoutes = (await import('./routes/products.js')).default;
-const categoriesRoutes = (await import('./routes/categories.js')).default;
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -79,8 +79,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// FIXED: 404 handler for all unmatched API routes
-app.all('/api/*', (req, res) => {
+// FIXED: 404 handler for API routes - using a different approach
+app.use('/api', (req, res, next) => {
+  // This will only be reached if no other API routes matched
   res.status(404).json({ 
     message: 'API route not found',
     path: req.originalUrl,
@@ -88,9 +89,19 @@ app.all('/api/*', (req, res) => {
   });
 });
 
-// Serve React app for all other routes (production only) - FIXED: use proper regex
+// Serve React app for all other routes (production only)
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  // FIXED: Use a more specific approach for React routing
+  app.use((req, res, next) => {
+    // If it's an API request that reached here, it's a 404
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ 
+        message: 'API route not found',
+        path: req.originalUrl
+      });
+    }
+    
+    // Otherwise, serve the React app
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   });
 }
