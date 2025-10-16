@@ -89,22 +89,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// FIXED: 404 handler for API routes - use * instead of parameter syntax
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
+    message: 'API route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
 // Serve React app for all other routes (production only)
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   });
 }
-
-// FIXED: 404 handler for API routes - Use parameter syntax
-app.use('/api/:unmatchedRoute', (req, res) => {
-  res.status(404).json({ 
-    message: 'API route not found',
-    path: req.originalUrl,
-    method: req.method,
-    attemptedRoute: req.params.unmatchedRoute
-  });
-});
 
 // Error handling middleware
 app.use((error, req, res, next) => {
