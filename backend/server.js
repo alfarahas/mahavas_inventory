@@ -28,24 +28,14 @@ const connectDB = async () => {
 // Connect to Database
 connectDB();
 
-// CORS Configuration
+// CORS Configuration - simplified for now to debug
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://mahavas-inventory.onrender.com',
-      'https://mahavas-inventory-frontend.onrender.com',
-      'http://localhost:3000',
-      'http://localhost:3001'
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'https://mahavas-inventory.onrender.com',
+    'https://mahavas-inventory-frontend.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -89,8 +79,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// FIXED: 404 handler for API routes - use * instead of parameter syntax
-app.use('/api/*', (req, res) => {
+// FIXED: 404 handler for all unmatched API routes
+app.all('/api/*', (req, res) => {
   res.status(404).json({ 
     message: 'API route not found',
     path: req.originalUrl,
@@ -98,7 +88,7 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Serve React app for all other routes (production only)
+// Serve React app for all other routes (production only) - FIXED: use proper regex
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
