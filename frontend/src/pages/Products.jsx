@@ -40,16 +40,6 @@ const Products = () => {
 
   const navigate = useNavigate();
 
-  const categories = [
-    'Safety Valves',
-    'Control Valves', 
-    'Check Valves',
-    'Steam Traps',
-    'Strainers & Separators',
-    'Complete Systems',
-    'Specialty Valves'
-  ];
-
   useEffect(() => {
     loadProducts();
   }, [filters]);
@@ -165,35 +155,6 @@ const getStockStatus = (product) => {
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 placeholder="Search by name, SKU..."
               />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                select
-                label="Category"
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-              >
-                <MenuItem value="">All Categories</MenuItem>
-                {categories.map(category => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                select
-                label="Status"
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-              >
-                <MenuItem value="">All Status</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="out_of_stock">Out of Stock</MenuItem>
-              </TextField>
             </Grid>
           </Grid>
         </CardContent>
